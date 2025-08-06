@@ -1,7 +1,7 @@
 """Classes used to create window and render 3D object(s)."""
 
 import pygame
-from OpenGL.GL import GL_DEPTH_TEST, GL_MODELVIEW, GL_PROJECTION, glClearColor, glEnable, glMatrixMode
+from OpenGL.GL import GL_DEPTH_TEST, GL_TEXTURE_2D, glClearColor, glEnable
 from OpenGL.GLU import gluLookAt, gluPerspective
 from pygame.locals import DOUBLEBUF, OPENGL, QUIT
 
@@ -19,11 +19,6 @@ class Camera:
         self.window_width = window_width
         self.window_height = window_height
 
-        # enable depth testing to properly render 3D scenes
-        glEnable(GL_DEPTH_TEST)
-        # set the background clear color
-        glClearColor(0.0, 0.0, 0.0, 1.0)
-
     def set_at(self, eye_x, eye_y, eye_z, center_x, center_y, center_z, up_x, up_y, up_z):
         """Set the camera's position and orientation.
 
@@ -38,41 +33,39 @@ class Camera:
             up_y (float): Y component of the up vector.
             up_z (float): Z component of the up vector.
         """
+        # set the background clear color
+        glClearColor(0.0, 0.0, 0.0, 1.0)
+
         # switch to projection matrix mode to define the camera projection
-        glMatrixMode(GL_PROJECTION)
+        # glMatrixMode(GL_PROJECTION)
         # Define the projection (FOV, aspect ratio, near and far clipping planes)
         gluPerspective(45, (self.window_width / self.window_height), 0.1, 100.0)
 
         # switch back to modelview matrix to apply transformations
-        glMatrixMode(GL_MODELVIEW)
+        # glMatrixMode(GL_MODELVIEW)
         # set the camera's position and orientation
         gluLookAt(eye_x, eye_y, eye_z, center_x, center_y, center_z, up_x, up_y, up_z)
 
 
-class Render:
+class Window:
     """Class used to create window and render planet."""
 
-    def __init__(self, planet):
-        """Initialize render object.
-
-        Args:
-            planet (Planet): Input planet to render.
-        """
+    def __init__(self, width=1000, height=800):
+        """Initialize render object."""
         pygame.init()
-        # info = pygame.display.Info()
-        # self.width, self.height = info.current_w, info.current_h
-        self.width, self.height = 800, 600
+        self.width, self.height = width, height
 
-        self.planet = planet
-        self.cam = Camera(self.width, self.height)
-
-    def run(self, speed=0.05):
-        """Render loop."""
         # create OpenGL window
         pygame.display.set_mode((self.width, self.height), DOUBLEBUF | OPENGL)
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
 
+        self.cam = Camera(self.width, self.height)
+
+    def render(self, planet, speed=0.05):
+        """Render loop."""
         # set camera viewpoint
-        self.cam.set_at(0, 0, 5, 0, 0, 0, 0, 1, 0)
+        self.cam.set_at(0, 5, 3, 0, 0, 0, 0, 0, 1)
 
         clock = pygame.time.Clock()
         is_running = True
@@ -86,8 +79,7 @@ class Render:
                 if event.type == QUIT:
                     is_running = False
 
-            self.planet.draw_and_rotate(rot_z, 0, 0, 1)
-
+            planet.draw_and_rotate(rot_z, 0, 0, 1)
             pygame.display.flip()
 
         pygame.quit()
