@@ -50,7 +50,7 @@ class Camera:
 class Window:
     """Class used to create window and render planet."""
 
-    def __init__(self, width=1000, height=800):
+    def __init__(self, width=1400, height=1000):
         """Initialize render object."""
         pygame.init()
         self.width, self.height = width, height
@@ -62,7 +62,7 @@ class Window:
 
         self.cam = Camera(self.width, self.height)
 
-    def render(self, planet, speed=0.05):
+    def render(self, planet, speed=0.01):
         """Render loop."""
         # set camera viewpoint
         self.cam.set_at(0, 5, 3, 0, 0, 0, 0, 0, 1)

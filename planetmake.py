@@ -10,7 +10,7 @@ def main():
     window = Window()
 
     texture = generate_texture()
-    planet = Planet(1.0, 50, 50, texture)
+    planet = Planet(1.5, 50, 50, texture)
 
     window.render(planet)
 
