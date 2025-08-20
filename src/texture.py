@@ -1,49 +1,27 @@
 import random
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from src.perlin import perlin_noise
 from src.utils import hex2rgb
 
-_colors = {
-    "ice": "#ffffff",
-    "ocean": "#5169a5",
-    "deep_ocean": "#182a60",
-    "desert": "#e5bb99",
-    "ground": "#948c7d",
-    "forest": "#647860",
-    "dark_forest": "#385339",
+_biomes = {
+    "deep_ocean": {"color": "#101924"},
+    "ocean": {"color": "#324f72"},
+    "ice_ocean": {"color": "#c8c8ff"},
+    "ice": {"color": "#ffffff"},
+    "desert": {"color": "#fdd964"},
+    "forest": {"color": "#385339"},
+    "mountain": {"color": "#726147"},
+    "placeholder": {"color": "#000000"},
 }
 
 
-def compute_lat_lon(i, j, shape):
-    lat = 90.0 - (i / shape) * 180.0
-    lon = (j / shape) * 360.0 - 180.0
-
-    return lat, lon
-
-
-def biome_color(altitude, biome):
-    sea_level = 0.6
-
-    if altitude < sea_level:
-        if altitude < sea_level * (8 / 10):
-            return hex2rgb(_colors["deep_ocean"])
-
-        return hex2rgb(_colors["ocean"])
-
-    else:
-
-        if biome < 0.2:
-            return hex2rgb(_colors["ground"])
-
-        if biome < 0.35:
-            return hex2rgb(_colors["desert"])
-
-        if biome < 0.6:
-            return hex2rgb(_colors["forest"])
-
-        return hex2rgb(_colors["dark_forest"])
+def get_lat(shape):
+    i = np.arange(shape)
+    lat_1d = 90.0 - (i / (shape - 1)) * 180.0
+    return np.tile(lat_1d[:, None], (1, shape))
 
 
 def random_seed(seed_min=0, seed_max=2**32):
@@ -58,15 +36,72 @@ def generate_noise(shape, res, octaves=6, persistence=0.55, lacunarity=2.0, tile
     return (noise_map - np.min(noise_map)) / (np.max(noise_map) - np.min(noise_map))
 
 
-def generate_texture(shape=1024, res=8):
+def generate_altitude(min_alt, max_alt, shape, res, seed=None):
+    noise_map = generate_noise(shape, res, seed=seed)
+
+    msk_land = noise_map > 0.5
+    msk_water = noise_map <= 0.5
+
+    altitude_map = np.zeros_like(noise_map)
+    altitude_map[msk_land] = ((noise_map[msk_land] - 0.5) / 0.5) * max_alt
+    altitude_map[msk_water] = ((noise_map[msk_water] - 0.5) / 0.5) * abs(min_alt)
+
+    return altitude_map
+
+
+def generate_temperature(min_temp, max_temp, shape, res, seed=None):
+    noise_map = generate_noise(shape, res, seed=seed)
+
+    lat = get_lat(shape)
+
+    lat_factor = np.cos(np.radians(lat))
+    temperature_map = min_temp + lat_factor * (max_temp - min_temp) + (noise_map - 0.5) * 20
+
+    return temperature_map
+
+
+def generate_world(shape, alti_map, temp_map):
     texture = np.zeros((shape, shape, 3), dtype=np.uint8)
 
-    altitude_map = generate_noise(shape, res, seed=2079352251)
-    biome_map = generate_noise(shape, res, seed=2074168408)
+    msk_water = alti_map <= 0
+    msk_land = alti_map > 0
 
-    for i in range(shape):
-        for j in range(shape):
-            lat, lon = compute_lat_lon(i, j, shape)
-            texture[i, j] = biome_color(altitude_map[i, j], biome_map[i, j])
+    texture[msk_water] = hex2rgb(_biomes["ocean"]["color"])
+    texture[msk_water & (alti_map < -2000)] = hex2rgb(_biomes["deep_ocean"]["color"])
+    texture[msk_water & (alti_map > -1000) & (temp_map < 0)] = hex2rgb(_biomes["ice_ocean"]["color"])
+
+    texture[msk_land] = hex2rgb(_biomes["forest"]["color"])
+
+    texture[msk_land & (alti_map > 3000)] = hex2rgb(_biomes["mountain"]["color"])
+    texture[msk_land & (alti_map > 5000)] = hex2rgb(_biomes["ice"]["color"])
+    texture[msk_land & (temp_map < -10)] = hex2rgb(_biomes["ice"]["color"])
+
+    return texture
+
+
+def plot_maps(temperature_map, altitude_map):
+    _, axes = plt.subplots(1, 2, figsize=(12, 6))
+    axes[0].imshow(temperature_map)
+    axes[0].set_title("Temperature Map")
+    axes[0].axis("off")
+
+    axes[1].imshow(altitude_map)
+    axes[1].set_title("Altitude Map")
+    axes[1].axis("off")
+
+    plt.show()
+
+
+def generate_texture(shape=1024, res=8):
+
+    altitude_map = generate_altitude(-12000, 8000, shape, res, 2079352251)
+    temperature_map = generate_temperature(-40, 35, shape, res, 2079352252)
+
+    lapse = (np.maximum(0, altitude_map) / 1000.0) * 6.5
+    temperature_map = temperature_map - lapse
+
+    # plot_maps(temperature_map, altitude_map)
+
+    texture = generate_world(shape, altitude_map, temperature_map)
 
     return texture
