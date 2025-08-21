@@ -25,7 +25,7 @@ from OpenGL.GLU import gluLookAt, gluPerspective
 from pygame.locals import DOUBLEBUF, OPENGL, QUIT
 
 _cam_params = {
-    "cam_eye": [0, -3, 2],
+    "cam_eye": [0, -5, 2],
     "cam_center": [0, 0, 0],
     "cam_up": [0, 1, 0],
     "light_position": [1.0, 0.5, 1.0, 0.0],
