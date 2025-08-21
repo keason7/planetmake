@@ -9,10 +9,10 @@ def main():
     """Initialize, draw and animate a planet."""
     window = Window()
 
-    texture = generate_texture()
+    texture = generate_texture(shape=1024)
+    height, width, _ = texture.shape
 
-    planet = Planet(1.0, 50, 50, texture)
-
+    planet = Planet(1.0, height, width, texture)
     window.render(planet)
 
 

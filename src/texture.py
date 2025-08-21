@@ -135,17 +135,17 @@ def generate_world(shape, res, alti_map, temp_map):
     return texture
 
 
-def plot_maps(temperature_map, altitude_map):
-    _, axes = plt.subplots(1, 2, figsize=(12, 6))
-    axes[0].imshow(temperature_map)
-    axes[0].set_title("Temperature Map")
-    axes[0].axis("off")
+# def plot_maps(temperature_map, altitude_map):
+#     _, axes = plt.subplots(1, 2, figsize=(12, 6))
+#     axes[0].imshow(temperature_map)
+#     axes[0].set_title("Temperature Map")
+#     axes[0].axis("off")
 
-    axes[1].imshow(altitude_map)
-    axes[1].set_title("Altitude Map")
-    axes[1].axis("off")
+#     axes[1].imshow(altitude_map)
+#     axes[1].set_title("Altitude Map")
+#     axes[1].axis("off")
 
-    plt.show()
+#     plt.show()
 
 
 def generate_texture(shape=1024, res=8):
