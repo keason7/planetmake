@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.perlin import perlin_noise
+from src.perlin import perlin_noise_2d
 from src.utils import hex2rgb
 
 _biomes = {
@@ -66,7 +66,7 @@ def generate_noise(shape, res, octaves=6, persistence=0.55, lacunarity=2.0, tile
     if seed is None:
         seed = random_seed()
 
-    noise_map = perlin_noise((shape, shape), (res, res), octaves, persistence, lacunarity, tileable, seed)
+    noise_map = perlin_noise_2d((shape, shape), (res, res), octaves, persistence, lacunarity, tileable, seed)
     return (noise_map - np.min(noise_map)) / (np.max(noise_map) - np.min(noise_map))
 
 
