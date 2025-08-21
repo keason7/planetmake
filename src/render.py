@@ -1,7 +1,26 @@
 """Classes used to create window and render 3D object(s)."""
 
 import pygame
-from OpenGL.GL import GL_DEPTH_TEST, GL_TEXTURE_2D, glClearColor, glEnable
+from OpenGL.GL import (
+    GL_AMBIENT,
+    GL_DEPTH_TEST,
+    GL_DIFFUSE,
+    GL_FRONT,
+    GL_LIGHT0,
+    GL_LIGHTING,
+    GL_MODELVIEW,
+    GL_POSITION,
+    GL_PROJECTION,
+    GL_SHININESS,
+    GL_SPECULAR,
+    GL_TEXTURE_2D,
+    glClearColor,
+    glEnable,
+    glLightfv,
+    glLoadIdentity,
+    glMaterialfv,
+    glMatrixMode,
+)
 from OpenGL.GLU import gluLookAt, gluPerspective
 from pygame.locals import DOUBLEBUF, OPENGL, QUIT
 
@@ -18,6 +37,24 @@ class Camera:
         """
         self.window_width = window_width
         self.window_height = window_height
+
+    def set_shading(self):
+        light_pos = [1.0, 0.5, 1.0, 0.0]
+        light_color = [1.0, 1.0, 1.0, 1.0]
+        ambient_light = [0.2, 0.2, 0.2, 1.0]
+
+        glLightfv(GL_LIGHT0, GL_POSITION, light_pos)
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color)
+        glLightfv(GL_LIGHT0, GL_SPECULAR, light_color)
+        glLightfv(GL_LIGHT0, GL_AMBIENT, ambient_light)
+
+        mat_diffuse = [1.0, 1.0, 1.0, 1.0]
+        mat_specular = [1.0, 1.0, 1.0, 1.0]
+        mat_shininess = [50.0]
+
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse)
+        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular)
+        glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess)
 
     def set_at(self, eye_x, eye_y, eye_z, center_x, center_y, center_z, up_x, up_y, up_z):
         """Set the camera's position and orientation.
@@ -36,14 +73,11 @@ class Camera:
         # set the background clear color
         glClearColor(0.0, 0.0, 0.0, 1.0)
 
-        # switch to projection matrix mode to define the camera projection
-        # glMatrixMode(GL_PROJECTION)
-        # Define the projection (FOV, aspect ratio, near and far clipping planes)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
         gluPerspective(45, (self.window_width / self.window_height), 0.1, 100.0)
 
-        # switch back to modelview matrix to apply transformations
-        # glMatrixMode(GL_MODELVIEW)
-        # set the camera's position and orientation
+        glMatrixMode(GL_MODELVIEW)
         gluLookAt(eye_x, eye_y, eye_z, center_x, center_y, center_z, up_x, up_y, up_z)
 
 
@@ -59,13 +93,16 @@ class Window:
         pygame.display.set_mode((self.width, self.height), DOUBLEBUF | OPENGL)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_TEXTURE_2D)
+        glEnable(GL_LIGHTING)
+        glEnable(GL_LIGHT0)
 
         self.cam = Camera(self.width, self.height)
 
     def render(self, planet, speed=0.01):
         """Render loop."""
         # set camera viewpoint
-        self.cam.set_at(0, 5, 3, 0, 0, 0, 0, 0, 1)
+        self.cam.set_shading()
+        self.cam.set_at(0, -3, 2, 0, 0, 0, 0, 1, 0)
 
         clock = pygame.time.Clock()
         is_running = True
