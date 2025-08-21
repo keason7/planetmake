@@ -106,7 +106,7 @@ def perlin_noise_2d(shape, res, octaves=1, persistence=0.5, lacunarity=2.0, tile
     # multipliers for each octave
     frequency, amplitude = 1, 1
 
-    # sum multiple octaves of Perlin noise
+    # sum multiple octaves of perlin noise
     for _ in range(octaves):
         noise += amplitude * _perlin_2d(shape, (int(frequency * res[0]), int(frequency * res[1])), tileable, seed)
 
