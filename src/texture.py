@@ -7,47 +7,68 @@ from src.utils import get_latitude_grid, hex2rgb, random_seed
 
 _biomes = {
     "ocean": {
-        "color": "#324f72",
+        "color": "#22344B",
         "max_alti": 0,
-        "min_alti": 0,
-        "max_temp": 0,
-        "min_temp": 0,
+        "min_alti": None,
+        "max_temp": None,
+        "min_temp": None,
+        "noise": 0.9,
     },
     "deep_ocean": {
-        "color": "#101924",
-        "max_alti": 0,
-        "min_alti": 0,
-        "max_temp": 0,
-        "min_temp": 0,
+        "color": "#182636",
+        "max_alti": -2000,
+        "min_alti": None,
+        "max_temp": None,
+        "min_temp": None,
+        "noise": 0.9,
     },
     "ice_ocean": {
-        "color": "#c8c8ff",
+        "color": "#b4b4ff",
         "max_alti": 0,
-        "min_alti": 0,
+        "min_alti": -1000,
         "max_temp": 0,
-        "min_temp": 0,
+        "min_temp": None,
+        "noise": 0.6,
     },
     "forest": {
         "color": "#385339",
-        "max_alti": 0,
+        "max_alti": None,
         "min_alti": 0,
-        "max_temp": 0,
-        "min_temp": 0,
+        "max_temp": None,
+        "min_temp": None,
+        "noise": 0.7,
     },
     "mountain": {
         "color": "#726147",
-        "max_alti": 0,
-        "min_alti": 0,
-        "max_temp": 0,
-        "min_temp": 0,
+        "max_alti": None,
+        "min_alti": 3000,
+        "max_temp": None,
+        "min_temp": None,
+        "noise": 0.6,
+    },
+    "mountain_ice": {
+        "color": "#ffffff",
+        "max_alti": None,
+        "min_alti": 5000,
+        "max_temp": None,
+        "min_temp": None,
+        "noise": 0.3,
     },
     "ice": {
         "color": "#ffffff",
-        "max_alti": 0,
+        "max_alti": None,
         "min_alti": 0,
-        "max_temp": 0,
-        "min_temp": 0,
+        "max_temp": -10,
+        "min_temp": None,
+        "noise": 0.3,
     },
+}
+
+_earth = {
+    "min_alti": -10000,
+    "max_alti": 8000,
+    "min_temp": -40,
+    "max_temp": 35,
 }
 
 
@@ -59,7 +80,7 @@ def generate_noise(shape, res, octaves=6, persistence=0.55, lacunarity=2.0, tile
     return (noise_map - np.min(noise_map)) / (np.max(noise_map) - np.min(noise_map))
 
 
-def generate_altitude(min_alt, max_alt, shape, res, seed=None):
+def generate_altitude_map(min_alt, max_alt, shape, res, seed=None):
     noise_map = generate_noise(shape, res, seed=seed)
 
     msk_land = noise_map > 0.5
@@ -72,13 +93,16 @@ def generate_altitude(min_alt, max_alt, shape, res, seed=None):
     return altitude_map
 
 
-def generate_temperature(min_temp, max_temp, shape, res, seed=None):
+def generate_temperature_map(altitude_map, min_temp, max_temp, shape, res, seed=None):
     noise_map = generate_noise(shape, res, seed=seed)
 
     lat = get_latitude_grid(shape, shape)
 
     lat_factor = np.cos(np.radians(lat))
     temperature_map = min_temp + lat_factor * (max_temp - min_temp) + (noise_map - 0.5) * 20
+
+    lapse = (np.maximum(0, altitude_map) / 1000.0) * 6.5
+    temperature_map = temperature_map - lapse
 
     return temperature_map
 
@@ -100,32 +124,44 @@ def add_color(texture, msk, color, noise_map, noise=0.6):
 def generate_world(shape, res, alti_map, temp_map):
     texture = np.zeros((shape, shape, 3), dtype=np.uint8)
 
-    msk_water = alti_map <= 0
-    msk_land = alti_map > 0
+    color_shade_map = generate_noise(shape, res, persistence=0.7, seed=None)
 
-    noise_map = generate_noise(shape, res, persistence=0.7, seed=None)
+    for biome_params in _biomes.values():
+        msk = np.ones((shape, shape), dtype=np.bool)
 
-    texture = add_color(texture, msk_water, _biomes["ocean"]["color"], noise_map, noise=0.9)
-    texture = add_color(texture, msk_water & (alti_map < -2000), _biomes["deep_ocean"]["color"], noise_map, noise=0.9)
-    texture = add_color(
-        texture, msk_water & (alti_map > -1000) & (temp_map < 0), _biomes["ice_ocean"]["color"], noise_map
-    )
+        if biome_params["min_alti"] is not None:
+            msk = msk & (alti_map > biome_params["min_alti"])
 
-    texture = add_color(texture, msk_land, _biomes["forest"]["color"], noise_map)
-    texture = add_color(texture, msk_land & (alti_map > 3000), _biomes["mountain"]["color"], noise_map)
-    texture = add_color(texture, msk_land & (alti_map > 5000), _biomes["ice"]["color"], noise_map, noise=0.3)
-    texture = add_color(texture, msk_land & (temp_map < -10), _biomes["ice"]["color"], noise_map, noise=0.3)
+        if biome_params["max_alti"] is not None:
+            msk = msk & (alti_map < biome_params["max_alti"])
+
+        if biome_params["min_temp"] is not None:
+            msk = msk & (temp_map > biome_params["min_temp"])
+
+        if biome_params["max_temp"] is not None:
+            msk = msk & (temp_map < biome_params["max_temp"])
+
+        texture = add_color(texture, msk, biome_params["color"], color_shade_map, noise=biome_params["noise"])
 
     return texture
 
 
 def generate_texture(shape=1024, res=8):
-
-    altitude_map = generate_altitude(-12000, 8000, shape, res, 2079352251)
-    temperature_map = generate_temperature(-40, 35, shape, res, 2079352252)
-
-    lapse = (np.maximum(0, altitude_map) / 1000.0) * 6.5
-    temperature_map = temperature_map - lapse
+    altitude_map = generate_altitude_map(
+        _earth["min_alti"],
+        _earth["max_alti"],
+        shape,
+        res,
+        seed=2079352251,
+    )
+    temperature_map = generate_temperature_map(
+        altitude_map,
+        _earth["min_temp"],
+        _earth["max_temp"],
+        shape,
+        res,
+        seed=2079352252,
+    )
 
     texture = generate_world(shape, res, altitude_map, temperature_map)
 
