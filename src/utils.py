@@ -5,17 +5,29 @@ import random
 import numpy as np
 
 
-def hex2rgb(hexa):
-    """Convert hexadecimal color to RGB format.
+def hex2rgba(hexa):
+    """Convert hexadecimal color to RGBA format.
 
     Args:
         hexa (str): Input hexa color.
 
+    Raises:
+        ValueError: Invalid hexadecimal color.
+
     Returns:
-        tuple: RGB color in tuple(r, g, b) format.
+        tuple: RGB color in tuple(r, g, b, a) format.
     """
     hexa = hexa.lstrip("#")
-    return tuple(int(hexa[i : i + 2], 16) for i in (0, 2, 4))
+
+    if len(hexa) == 6:
+        r, g, b = (int(hexa[i : i + 2], 16) for i in (0, 2, 4))
+        a = 255
+    elif len(hexa) == 8:
+        r, g, b, a = (int(hexa[i : i + 2], 16) for i in (0, 2, 4, 6))
+    else:
+        raise ValueError(f"Invalid hexadecimal color: {hexa}")
+
+    return (r, g, b, a)
 
 
 def random_seed(seed_min=0, seed_max=2**32):

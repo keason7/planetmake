@@ -1,13 +1,14 @@
 """Procedural generation texture of planet using Perlin Noise."""
 
 import numpy as np
+from PIL import Image
 
 from src.perlin import perlin_noise_2d
-from src.utils import get_latitude_grid, hex2rgb, random_seed
+from src.utils import get_latitude_grid, hex2rgba, random_seed
 
 _biomes = {
     "ice_ocean": {
-        "color": "#b4b4ff",
+        "color": "#cacaec",
         "max_alti": 0,
         "min_alti": -1000,
         "max_temp": 0,
@@ -15,7 +16,7 @@ _biomes = {
         "noise": 0.9,
     },
     "ocean": {
-        "color": "#22344B",
+        "color": "#22344b",
         "max_alti": 0,
         "min_alti": -2000,
         "max_temp": None,
@@ -59,7 +60,7 @@ _biomes = {
         "max_alti": 4500,
         "min_alti": 500,
         "max_temp": None,
-        "min_temp": 27,
+        "min_temp": 29,
         "noise": 0.9,
     },
     "rock": {
@@ -67,21 +68,21 @@ _biomes = {
         "max_alti": 4500,
         "min_alti": 0,
         "max_temp": None,
-        "min_temp": 27,
+        "min_temp": 29,
         "noise": 0.9,
     },
     "plain": {
-        "color": "#8E8B6B",
+        "color": "#8e8b6b",
         "max_alti": 4500,
         "min_alti": 0,
-        "max_temp": 27,
+        "max_temp": 29,
         "min_temp": 22,
         "noise": 0.9,
     },
     "dark_forest": {
-        "color": "#2A3D2B",
+        "color": "#2a3d2b",
         "max_alti": 4500,
-        "min_alti": 0,
+        "min_alti": 2000,
         "max_temp": 22,
         "min_temp": None,
         "noise": 0.9,
@@ -95,7 +96,10 @@ _biomes = {
         "noise": 0.9,
     },
 }
-
+_clouds = {
+    "color": "#ffffff86",
+    "noise": 0.9,
+}
 
 _earth = {
     "min_alti": -10000,
@@ -105,7 +109,7 @@ _earth = {
 }
 
 
-def generate_noise(shape, res, octaves=6, persistence=0.55, lacunarity=2.0, tileable=(True, True), seed=None):
+def generate_noise(shape, res, octaves=8, persistence=0.5, lacunarity=2.0, tileable=(True, True), seed=None):
     if seed is None:
         seed = random_seed()
 
@@ -140,8 +144,14 @@ def generate_temperature_map(altitude_map, min_temp, max_temp, shape, res, seed=
     return temperature_map
 
 
+def generate_cloud_map(shape, res, seed=None):
+    cloud_map = generate_noise(shape, res, octaves=6, persistence=0.6, seed=seed)
+
+    return cloud_map
+
+
 def add_color(texture, msk, color, noise_map, noise=0.6):
-    texture[msk] = hex2rgb(color)
+    texture[msk] = hex2rgba(color)
 
     texture = texture.astype(np.float64)
 
@@ -154,8 +164,17 @@ def add_color(texture, msk, color, noise_map, noise=0.6):
     return np.clip(texture, 0, 255).astype(np.uint8)
 
 
-def generate_world(shape, res, alti_map, temp_map):
-    texture = np.zeros((shape, shape, 3), dtype=np.uint8)
+def alpha_composite(img_1, img_2):
+    return np.array(
+        Image.alpha_composite(
+            Image.fromarray(img_1),
+            Image.fromarray(img_2),
+        )
+    )
+
+
+def generate_world(shape, res, altitude_map, temperature_map, cloud_map):
+    texture = np.zeros((shape, shape, 4), dtype=np.uint8)
 
     color_shade_map = generate_noise(shape, res, persistence=0.7, seed=None)
 
@@ -165,27 +184,30 @@ def generate_world(shape, res, alti_map, temp_map):
         msk = np.ones((shape, shape), dtype=np.bool)
 
         if biome_params["min_alti"] is not None:
-            msk = msk & (biome_params["min_alti"] <= alti_map)
+            msk = msk & (biome_params["min_alti"] <= altitude_map)
 
         if biome_params["max_alti"] is not None:
-            msk = msk & (alti_map <= biome_params["max_alti"])
+            msk = msk & (altitude_map <= biome_params["max_alti"])
 
         if biome_params["min_temp"] is not None:
-            msk = msk & (biome_params["min_temp"] <= temp_map)
+            msk = msk & (biome_params["min_temp"] <= temperature_map)
 
         if biome_params["max_temp"] is not None:
-            msk = msk & (temp_map <= biome_params["max_temp"])
+            msk = msk & (temperature_map <= biome_params["max_temp"])
 
         msk = msk & msk_map
-
         msk_map[msk] = False
 
         texture = add_color(texture, msk, biome_params["color"], color_shade_map, noise=biome_params["noise"])
 
-    return texture
+    cloud_texture = np.zeros((shape, shape, 4), dtype=np.uint8)
+    cloud_texture = add_color(cloud_texture, cloud_map > 0.55, _clouds["color"], color_shade_map, noise=0.6)
+
+    return alpha_composite(texture, cloud_texture)
 
 
 def generate_texture(shape=1024, res=8):
+
     altitude_map = generate_altitude_map(
         _earth["min_alti"],
         _earth["max_alti"],
@@ -202,6 +224,11 @@ def generate_texture(shape=1024, res=8):
         # seed=2079352252,
     )
 
-    texture = generate_world(shape, res, altitude_map, temperature_map)
+    cloud_map = generate_cloud_map(
+        shape,
+        res,
+    )
+
+    texture = generate_world(shape, res, altitude_map, temperature_map, cloud_map)
 
     return texture

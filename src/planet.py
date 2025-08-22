@@ -5,6 +5,7 @@ from OpenGL.GL import (
     GL_DEPTH_BUFFER_BIT,
     GL_LINEAR,
     GL_RGB,
+    GL_RGBA,
     GL_TEXTURE_2D,
     GL_TEXTURE_MAG_FILTER,
     GL_TEXTURE_MIN_FILTER,
@@ -52,11 +53,11 @@ class Planet:
         glTexImage2D(
             GL_TEXTURE_2D,  # define 2D texture target
             0,  # base value level = 0
-            GL_RGB,
+            GL_RGBA,
             self.texture.shape[1],
             self.texture.shape[0],
             0,  # no image border
-            GL_RGB,
+            GL_RGBA,
             GL_UNSIGNED_BYTE,
             self.texture,
         )
