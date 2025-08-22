@@ -3,23 +3,44 @@
 import pygame
 from OpenGL.GL import (
     GL_AMBIENT,
+    GL_COLOR_BUFFER_BIT,
+    GL_DEPTH_BUFFER_BIT,
     GL_DEPTH_TEST,
     GL_DIFFUSE,
     GL_FRONT,
     GL_LIGHT0,
     GL_LIGHTING,
+    GL_LINEAR,
     GL_MODELVIEW,
     GL_POSITION,
     GL_PROJECTION,
+    GL_QUADS,
+    GL_RGBA,
     GL_SHININESS,
     GL_SPECULAR,
     GL_TEXTURE_2D,
+    GL_TEXTURE_MAG_FILTER,
+    GL_TEXTURE_MIN_FILTER,
+    GL_UNSIGNED_BYTE,
+    glBegin,
+    glBindTexture,
+    glClear,
     glClearColor,
+    glDisable,
     glEnable,
+    glEnd,
+    glGenTextures,
     glLightfv,
     glLoadIdentity,
     glMaterialfv,
     glMatrixMode,
+    glOrtho,
+    glPopMatrix,
+    glPushMatrix,
+    glTexCoord2f,
+    glTexImage2D,
+    glTexParameteri,
+    glVertex2f,
 )
 from OpenGL.GLU import gluLookAt, gluPerspective
 from pygame.locals import DOUBLEBUF, OPENGL, QUIT
@@ -40,13 +61,14 @@ _cam_params = {
 class Camera:
     """OpenGL Camera."""
 
-    def __init__(self, window_width, window_height):
+    def __init__(self, window_width, window_height, path_background=None):
         """Initialize camera.
 
         Args:
             window_width (int): Width of the window (pixels).
             window_height (int): Height of the window (pixels).
         """
+        self.backgroung_id = None
         self.window_width = window_width
         self.window_height = window_height
 
@@ -55,6 +77,56 @@ class Camera:
         glEnable(GL_TEXTURE_2D)
         glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
+
+        if path_background is not None:
+            self.backgroung_id = self.__load_background(path_background)
+
+    def __load_background(self, path_background):
+        surf = pygame.image.load(path_background).convert_alpha()
+        img_data = pygame.image.tostring(surf, "RGBA", True)
+        width, height = surf.get_size()
+
+        tex_id = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, tex_id)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        return tex_id
+
+    def draw_background(self):
+        """Draw a fullscreen quad with the background texture."""
+        glDisable(GL_DEPTH_TEST)
+        glDisable(GL_LIGHTING)
+
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        glOrtho(-1, 1, -1, 1, -1, 1)
+
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+
+        glBindTexture(GL_TEXTURE_2D, self.backgroung_id)
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 0)
+        glVertex2f(-1, -1)
+        glTexCoord2f(1, 0)
+        glVertex2f(1, -1)
+        glTexCoord2f(1, 1)
+        glVertex2f(1, 1)
+        glTexCoord2f(0, 1)
+        glVertex2f(-1, 1)
+        glEnd()
+
+        glPopMatrix()
+        glMatrixMode(GL_PROJECTION)
+        glPopMatrix()
+        glMatrixMode(GL_MODELVIEW)
+
+        glEnable(GL_LIGHTING)
+        glEnable(GL_DEPTH_TEST)
 
     def set_shading(
         self,
@@ -123,7 +195,7 @@ class Camera:
 class Window:
     """Class used to create window and render planet."""
 
-    def __init__(self, width=1400, height=1000):
+    def __init__(self, width=1400, height=1000, path_backgound=None):
         """Initialize render object.
 
         Args:
@@ -137,7 +209,7 @@ class Window:
         pygame.display.set_mode((self.width, self.height), DOUBLEBUF | OPENGL)
 
         # initialize OpenGL camera
-        self.cam = Camera(self.width, self.height)
+        self.cam = Camera(self.width, self.height, path_backgound)
 
     def render(self, planet, delta_z=0.1):
         """Render loop.
@@ -172,6 +244,12 @@ class Window:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     is_running = False
+
+            # clears the screen and depth buffers for new frame
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+            if self.cam.backgroung_id is not None:
+                self.cam.draw_background()
 
             # rotate by delta_z degrees at each frame
             rot_z += delta_z

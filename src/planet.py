@@ -1,17 +1,13 @@
 """Planet class."""
 
 from OpenGL.GL import (
-    GL_COLOR_BUFFER_BIT,
-    GL_DEPTH_BUFFER_BIT,
     GL_LINEAR,
-    GL_RGB,
     GL_RGBA,
     GL_TEXTURE_2D,
     GL_TEXTURE_MAG_FILTER,
     GL_TEXTURE_MIN_FILTER,
     GL_UNSIGNED_BYTE,
     glBindTexture,
-    glClear,
     glGenTextures,
     glPopMatrix,
     glPushMatrix,
@@ -100,9 +96,6 @@ class Planet:
             y (float): Component y of the rotation axis.
             z (float): Component z of the rotation axis.
         """
-        # clears the screen and depth buffers for new frame
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
         # save current transformation matrix
         glPushMatrix()
 

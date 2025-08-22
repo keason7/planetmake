@@ -7,7 +7,7 @@ from src.texture import generate_texture
 
 def main():
     """Initialize, draw and animate a planet."""
-    window = Window()
+    window = Window(path_backgound="./assets/background.png")
 
     texture = generate_texture(shape=1024)
     height, width, _ = texture.shape
