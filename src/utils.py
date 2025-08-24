@@ -15,7 +15,7 @@ def hex2rgba(hexa):
         ValueError: Invalid hexadecimal color.
 
     Returns:
-        tuple: RGB color in tuple(r, g, b, a) format.
+        tuple: RGBA color in tuple(r, g, b, a) format.
     """
     hexa = hexa.lstrip("#")
 

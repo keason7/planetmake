@@ -59,7 +59,7 @@ _cam_params = {
 
 
 class Camera:
-    """OpenGL Camera."""
+    """OpenGL camera."""
 
     def __init__(self, window_width, window_height, path_background=None):
         """Initialize camera.
@@ -67,6 +67,7 @@ class Camera:
         Args:
             window_width (int): Width of the window (pixels).
             window_height (int): Height of the window (pixels).
+            path_background (str, optional): Background path. Defaults to None.
         """
         self.backgroung_id = None
         self.window_width = window_width
@@ -82,33 +83,52 @@ class Camera:
             self.backgroung_id = self.__load_background(path_background)
 
     def __load_background(self, path_background):
-        surf = pygame.image.load(path_background).convert_alpha()
-        img_data = pygame.image.tostring(surf, "RGBA", True)
-        width, height = surf.get_size()
+        """Load backgound texture.
 
-        tex_id = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, tex_id)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+        Args:
+            path_background (str): Background path.
 
+        Returns:
+            np.array: Texture.
+        """
+        texture_id = glGenTextures(1)
+
+        background = pygame.image.load(path_background).convert_alpha()
+        width, height = background.get_size()
+
+        # extract raw bytes in RGBA format
+        background_data = pygame.image.tostring(background, "RGBA", True)
+
+        # bind texture so that next commands affect it and load image on texture
+        glBindTexture(GL_TEXTURE_2D, texture_id)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, background_data)
+
+        # apply filters if texture is larger/smaller that sphere (using linear interpolation)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        return tex_id
+
+        return texture_id
 
     def draw_background(self):
-        """Draw a fullscreen quad with the background texture."""
+        """Draw background texture."""
+
+        # disable depth and lightining so the quad is always drawn
         glDisable(GL_DEPTH_TEST)
         glDisable(GL_LIGHTING)
 
+        # switch to projection mode in [-1, 1] range on each axis
         glMatrixMode(GL_PROJECTION)
         glPushMatrix()
         glLoadIdentity()
         glOrtho(-1, 1, -1, 1, -1, 1)
 
+        # switch to modelview and bind the texture
         glMatrixMode(GL_MODELVIEW)
         glPushMatrix()
         glLoadIdentity()
-
         glBindTexture(GL_TEXTURE_2D, self.backgroung_id)
+
+        # draw a quad filling the screen with texture
         glBegin(GL_QUADS)
         glTexCoord2f(0, 0)
         glVertex2f(-1, -1)
@@ -120,11 +140,13 @@ class Camera:
         glVertex2f(-1, 1)
         glEnd()
 
+        # restore modelview and projection matrices to what they were
         glPopMatrix()
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()
         glMatrixMode(GL_MODELVIEW)
 
+        # re enable lighning
         glEnable(GL_LIGHTING)
         glEnable(GL_DEPTH_TEST)
 
@@ -201,6 +223,7 @@ class Window:
         Args:
             width (int, optional): Width of the window (pixels). Defaults to 1400.
             height (int, optional): Height of the window (pixels). Defaults to 1000.
+            path_background (str, optional): Background path. Defaults to None.
         """
         pygame.init()
         self.width, self.height = width, height

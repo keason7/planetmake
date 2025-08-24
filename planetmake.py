@@ -5,7 +5,7 @@ from src.render import Window
 from src.texture import generate_texture
 
 
-def main():
+def planetmake():
     """Initialize, draw and animate a planet."""
     window = Window(path_backgound="./assets/background.png")
 
@@ -17,4 +17,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    planetmake()
