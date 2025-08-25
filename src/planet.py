@@ -1,20 +1,8 @@
 """Planet class."""
 
-from OpenGL.GL import (
-    GL_LINEAR,
-    GL_RGBA,
-    GL_TEXTURE_2D,
-    GL_TEXTURE_MAG_FILTER,
-    GL_TEXTURE_MIN_FILTER,
-    GL_UNSIGNED_BYTE,
-    glBindTexture,
-    glGenTextures,
-    glPopMatrix,
-    glPushMatrix,
-    glRotatef,
-    glTexImage2D,
-    glTexParameteri,
-)
+from OpenGL.GL import (GL_LINEAR, GL_RGBA, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER,
+                       GL_UNSIGNED_BYTE, glBindTexture, glGenTextures, glPopMatrix, glPushMatrix, glRotatef,
+                       glTexImage2D, glTexParameteri)
 from OpenGL.GLU import gluNewQuadric, gluQuadricTexture, gluSphere
 
 

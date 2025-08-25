@@ -1,47 +1,12 @@
 """Classes used to create window and render 3D object(s)."""
 
 import pygame
-from OpenGL.GL import (
-    GL_AMBIENT,
-    GL_COLOR_BUFFER_BIT,
-    GL_DEPTH_BUFFER_BIT,
-    GL_DEPTH_TEST,
-    GL_DIFFUSE,
-    GL_FRONT,
-    GL_LIGHT0,
-    GL_LIGHTING,
-    GL_LINEAR,
-    GL_MODELVIEW,
-    GL_POSITION,
-    GL_PROJECTION,
-    GL_QUADS,
-    GL_RGBA,
-    GL_SHININESS,
-    GL_SPECULAR,
-    GL_TEXTURE_2D,
-    GL_TEXTURE_MAG_FILTER,
-    GL_TEXTURE_MIN_FILTER,
-    GL_UNSIGNED_BYTE,
-    glBegin,
-    glBindTexture,
-    glClear,
-    glClearColor,
-    glDisable,
-    glEnable,
-    glEnd,
-    glGenTextures,
-    glLightfv,
-    glLoadIdentity,
-    glMaterialfv,
-    glMatrixMode,
-    glOrtho,
-    glPopMatrix,
-    glPushMatrix,
-    glTexCoord2f,
-    glTexImage2D,
-    glTexParameteri,
-    glVertex2f,
-)
+from OpenGL.GL import (GL_AMBIENT, GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST, GL_DIFFUSE, GL_FRONT,
+                       GL_LIGHT0, GL_LIGHTING, GL_LINEAR, GL_MODELVIEW, GL_POSITION, GL_PROJECTION, GL_QUADS, GL_RGBA,
+                       GL_SHININESS, GL_SPECULAR, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER,
+                       GL_UNSIGNED_BYTE, glBegin, glBindTexture, glClear, glClearColor, glDisable, glEnable, glEnd,
+                       glGenTextures, glLightfv, glLoadIdentity, glMaterialfv, glMatrixMode, glOrtho, glPopMatrix,
+                       glPushMatrix, glTexCoord2f, glTexImage2D, glTexParameteri, glVertex2f)
 from OpenGL.GLU import gluLookAt, gluPerspective
 from pygame.locals import DOUBLEBUF, OPENGL, QUIT
 
