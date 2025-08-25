@@ -23,12 +23,12 @@ jobs:
 
       - name: Install code checks
         run: |
-          pip install flake8 black
+          pip install flake8 isort
 
       - name: Check line length with flake8
         run: |
           flake8 . --max-line-length=120
 
-      - name: Check code formatting with black
+      - name: Check import order with isort
         run: |
-          black . --check --diff --line-length 120
+          isort . --check-only --diff --line-length 120
