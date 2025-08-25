@@ -47,7 +47,7 @@ def _perlin_2d(shape, res, tileable=(False, False), seed=42):
     # create a grid of point offset coordinates of shape (height, width, 2) with values in [0,1) range
     # each point has a x and y offset inside its cell so grid give the relative position vector from
     # the top-left corner of the current cell
-    grid = np.mgrid[0 : res[0] : delta[0], 0 : res[1] : delta[1]]
+    grid = np.mgrid[0:res[0]:delta[0], 0:res[1]:delta[1]]
     grid = np.transpose(grid, (1, 2, 0)) % 1
 
     # generate random gradients vectors for each grid coordinate
@@ -65,10 +65,10 @@ def _perlin_2d(shape, res, tileable=(False, False), seed=42):
     gradients = gradients.repeat(d[0], 0).repeat(d[1], 1)
 
     # get vectors at each grid corners
-    gradient_top_left = gradients[: -d[0], : -d[1]]
-    gradient_bottom_left = gradients[d[0] :, : -d[1]]
-    gradient_top_right = gradients[: -d[0], d[1] :]
-    gradient_bottom_right = gradients[d[0] :, d[1] :]
+    gradient_top_left = gradients[:-d[0], :-d[1]]
+    gradient_bottom_left = gradients[d[0]:, :-d[1]]
+    gradient_top_right = gradients[:-d[0], d[1]:]
+    gradient_bottom_right = gradients[d[0]:, d[1]:]
 
     # compute dot product of gradient and vector from corners
     # represent how much each corner pulls the value at the point inside the cell

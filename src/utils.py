@@ -20,10 +20,10 @@ def hex2rgba(hexa):
     hexa = hexa.lstrip("#")
 
     if len(hexa) == 6:
-        r, g, b = (int(hexa[i : i + 2], 16) for i in (0, 2, 4))
+        r, g, b = (int(hexa[i:i+2], 16) for i in (0, 2, 4))
         a = 255
     elif len(hexa) == 8:
-        r, g, b, a = (int(hexa[i : i + 2], 16) for i in (0, 2, 4, 6))
+        r, g, b, a = (int(hexa[i:i+2], 16) for i in (0, 2, 4, 6))
     else:
         raise ValueError(f"Invalid hexadecimal color: {hexa}")
 
