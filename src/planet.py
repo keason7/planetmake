@@ -21,17 +21,18 @@ from OpenGL.GLU import gluNewQuadric, gluQuadricTexture, gluSphere
 class Planet:
     """A class representing a 3D textured sphere (planet) using OpenGL."""
 
-    def __init__(self, radius, slices, stacks, texture=None):
+    def __init__(self, radius, texture):
         """Initialize planet.
 
         Args:
             radius (float): Radius of the sphere.
-            slices (int): Number of vertical divisions (longitude).
-            stacks (int): Number of horizontal divisions (latitude).
+            texture (np.array): Planet texture of shape (H, W, 4).
         """
+        height, width, _ = texture.shape
+
         self.radius = radius
-        self.slices = slices
-        self.stacks = stacks
+        self.slices = height
+        self.stacks = width
 
         self.texture = texture
         self.texture_id = None

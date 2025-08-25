@@ -11,7 +11,7 @@ _biomes = {
         "color": "#cacaec",
         "max_alti": 0,
         "min_alti": -1000,
-        "max_temp": 0,
+        "max_temp": -5,
         "min_temp": None,
         "noise": 0.9,
     },
@@ -35,14 +35,22 @@ _biomes = {
         "color": "#ffffff",
         "max_alti": None,
         "min_alti": 0,
-        "max_temp": -10,
+        "max_temp": -25,
         "min_temp": None,
         "noise": 0.3,
+    },
+    "pole_rock": {
+        "color": "#726147",
+        "max_alti": None,
+        "min_alti": 0,
+        "max_temp": -10,
+        "min_temp": None,
+        "noise": 0.9,
     },
     "mountain_ice": {
         "color": "#ffffff",
         "max_alti": None,
-        "min_alti": 5000,
+        "min_alti": 6000,
         "max_temp": None,
         "min_temp": None,
         "noise": 0.3,
@@ -50,14 +58,14 @@ _biomes = {
     "mountain": {
         "color": "#726147",
         "max_alti": None,
-        "min_alti": 4500,
+        "min_alti": 4000,
         "max_temp": None,
         "min_temp": None,
         "noise": 0.9,
     },
     "desert": {
         "color": "#e3c29c",
-        "max_alti": 4500,
+        "max_alti": 4000,
         "min_alti": 500,
         "max_temp": None,
         "min_temp": 29,
@@ -65,7 +73,7 @@ _biomes = {
     },
     "rock": {
         "color": "#d2a98e",
-        "max_alti": 4500,
+        "max_alti": 500,
         "min_alti": 0,
         "max_temp": None,
         "min_temp": 29,
@@ -73,7 +81,7 @@ _biomes = {
     },
     "plain": {
         "color": "#8e8b6b",
-        "max_alti": 4500,
+        "max_alti": 4000,
         "min_alti": 0,
         "max_temp": 29,
         "min_temp": 22,
@@ -81,7 +89,7 @@ _biomes = {
     },
     "dark_forest": {
         "color": "#2a3d2b",
-        "max_alti": 4500,
+        "max_alti": 4000,
         "min_alti": 2000,
         "max_temp": 22,
         "min_temp": None,
@@ -97,7 +105,7 @@ _biomes = {
     },
 }
 _clouds = {
-    "color": "#ffffff86",
+    "color": "#ffffff68",
     "noise": 0.9,
 }
 
@@ -120,7 +128,7 @@ def generate_noise(shape, res, octaves=8, persistence=0.5, lacunarity=2.0, tilea
         lacunarity (float, optional): _descrFrequency multiplier for each successive octaveiption_. Defaults to 2.0.
         tileable (tuple, optional): Make noise tilable along an axis (avoid begin/end discontinuity).
             Defaults to (True, True).
-        seed (_type_, optional): Random seed. Defaults to None.
+        seed (int, optional): Random seed. Defaults to None.
 
     Returns:
         np.array: Perlin noise of shape (shape, shape) in [0, 1] range.
@@ -163,7 +171,7 @@ def generate_altitude_map(min_alt, max_alt, shape, res, seed=None):
     return altitude_map
 
 
-def generate_temperature_map(min_temp, max_temp, altitude_map, shape, res, lapse_rate=6.5, seed=None):
+def generate_temperature_map(min_temp, max_temp, altitude_map, shape, res, lapse_rate=9.2, seed=None):
     """Generate a procedural temperature map using perlin noise. Extrem high values are located on equator
     and low values on poles or in altitude with lapse_rate:
     https://en.wikipedia.org/wiki/Lapse_rate
@@ -274,7 +282,7 @@ def generate_world(altitude_map, temperature_map, cloud_map, shape, res):
     cloud_texture = np.zeros((shape, shape, 4), dtype=np.uint8)
 
     # perlin noise for colors variations
-    color_shade_map = generate_noise(shape, res, persistence=0.7, seed=None)
+    color_shade_map = generate_noise(shape, res, persistence=0.8, seed=None)
 
     # mask of pixels available for selection
     msk_map = np.ones((shape, shape), dtype=np.bool)
