@@ -9,9 +9,9 @@ def planetmake():
     """Initialize, draw and animate a planet."""
     texture = generate_texture(shape=1024)
 
+    window = Window(path_backgound="./assets/background.png")
     planet = Planet(1.0, texture)
 
-    window = Window(path_backgound="./assets/background.png")
     window.render(planet)
 
 
